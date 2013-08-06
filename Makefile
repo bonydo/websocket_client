@@ -10,7 +10,7 @@ clean:
 
 test-deps:
 	git clone https://github.com/extend/cowboy.git test-deps/cowboy
-	pushd test-deps/cowboy; make; popd
+	cd test-deps/cowboy; make; cd ../..
 
 test: test-deps
 	mkdir -p .ct_results

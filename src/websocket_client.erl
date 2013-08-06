@@ -79,7 +79,7 @@ ws_client_init(Handler, Protocol, Host, Port, Path, Args) ->
         _ ->
             inet:setopts(Socket, [{active, true}])
     end,
-    {ok, HandlerState, KeepAlive} = case Handler:init(Args, WSReq) of
+    {ok, HandlerState, KeepAlive} = case Handler:websocket_init(Args, WSReq) of
                                         {ok, HS} ->
                                             {ok, HS, infinity};
                                         {ok, HS, KA} ->
@@ -97,18 +97,20 @@ ws_client_init(Handler, Protocol, Host, Port, Path, Args) ->
 -spec websocket_handshake(WSReq :: websocket_req:req()) ->
     ok.
 websocket_handshake(WSReq) ->
-    [Protocol, Path, Host, Key, Transport, Socket] =
-        websocket_req:get([protocol, path, host, key, transport, socket], WSReq),
+    [Protocol, Path, Host, Key, Transport, Socket, Handler] =
+        websocket_req:get([protocol, path, host, key, transport, 
+                           socket, handler], WSReq),
+    MainHeaders = [<<"\r\nUpgrade: WebSocket"
+                     "\r\nConnection: Upgrade"
+                     "\r\nSec-WebSocket-Key: ">>, Key,
+                   <<"\r\nOrigin: ">>, atom_to_binary(Protocol, utf8), <<"://">>, Host,
+                   <<"\r\nSec-WebSocket-Protocol: "
+                     "\r\nSec-WebSocket-Version: 13"
+                     "\r\n\r\n">>],
+    Headers = Handler:init(WSReq) ++ MainHeaders,
     Handshake = [<<"GET ">>, Path,
                  <<" HTTP/1.1"
-                   "\r\nHost: ">>, Host,
-                 <<"\r\nUpgrade: WebSocket"
-                   "\r\nConnection: Upgrade"
-                   "\r\nSec-WebSocket-Key: ">>, Key,
-                 <<"\r\nOrigin: ">>, atom_to_binary(Protocol, utf8), <<"://">>, Host,
-                 <<"\r\nSec-WebSocket-Protocol: "
-                   "\r\nSec-WebSocket-Version: 13"
-                   "\r\n\r\n">>],
+                   "\r\nHost: ">>, Host] ++ Headers,
     Transport = websocket_req:transport(WSReq),
     Socket =    websocket_req:socket(WSReq),
     Transport:send(Socket, Handshake),

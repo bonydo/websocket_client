@@ -12,7 +12,8 @@
         ]).
 
 -export([
-         init/2,
+         init/1,
+         websocket_init/2,
          websocket_handle/3,
          websocket_info/3,
          websocket_terminate/3
@@ -44,7 +45,10 @@ recv(Pid) ->
         M -> M
     end.
 
-init(_, _WSReq) ->
+init(_) ->
+    [].
+
+websocket_init(_, _WSReq) ->
     {ok, #state{}}.
 
 websocket_handle(Frame, _, State = #state{waiting = undefined, buffer = Buffer}) ->

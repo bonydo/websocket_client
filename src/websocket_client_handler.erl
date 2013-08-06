@@ -4,7 +4,10 @@
 -type keepalive() :: integer().
 -type close_type() :: normal | error | remote.
 
--callback init(list(), websocket_req:req()) ->
+-callback init(websocket_req:req()) ->
+    {ok, list()}.
+
+-callback websocket_init(list(), websocket_req:req()) ->
     {ok, state()}
         | {ok, state(), keepalive()}.
 
